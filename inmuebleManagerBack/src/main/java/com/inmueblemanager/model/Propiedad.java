@@ -2,49 +2,52 @@ package com.inmueblemanager.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "propiedad")
-@Data
+@Table(name = "propiedades")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Propiedad {
+public class Propiedad extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Nombre identificativo para el propietario, ej: "Piso Centro Madrid"
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false)
     private String nombre;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     private String direccion;
 
-    @Column(length = 100)
+    @Column(nullable = false)
     private String ciudad;
 
-    @Column(length = 100)
-    private String pais;
+    @Column(nullable = false)
+    private String tipo;
 
-    // Precio base por noche (o por día), se puede usar en cálculos
-    @Column(name = "precio_noche", precision = 10, scale = 2)
-    private BigDecimal precioNoche;
-
-    // Propietario de esta propiedad (el usuario dueño)
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "usuario_id", nullable = false)
-    @ToString.Exclude
-    private Usuario propietario;
+    private Usuario usuario;
 
-    // Ocupaciones (reservas/alquileres) de esta propiedad
-    @OneToMany(mappedBy = "propiedad", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "propiedad", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default
-    @ToString.Exclude
-    private List<Ocupacion> ocupaciones = new ArrayList<>();
+    @JsonIgnore
+    private List<PropiedadImagen> imagenes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "propiedad", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    @JsonIgnore
+    private List<Alquiler> alquileres = new ArrayList<>();
+
+    @OneToMany(mappedBy = "propiedad", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default
+    @JsonIgnore
+    private List<Gasto> gastos = new ArrayList<>();
 }

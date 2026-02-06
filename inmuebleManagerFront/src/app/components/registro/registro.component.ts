@@ -1,0 +1,204 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule, NgForm } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AuthService, RegistroRequest } from '../../services/auth.service';
+
+@Component({
+  selector: 'app-registro',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="container mt-5">
+      <div class="row justify-content-center">
+        <div class="col-md-6">
+          <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body p-5">
+              <div class="text-center mb-4">
+                <h2 class="card-title fw-bold">Crear Cuenta</h2>
+                <p class="text-muted small">Únete a InmuebleManager</p>
+              </div>
+              
+              <!-- Error Alert -->
+              <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center" 
+                   role="alert"
+                   *ngIf="error">
+                <svg class="bi flex-shrink-0 me-2" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0l-5.708 9.762a1.13 1.13 0 0 0 .98 1.72h11.456a1.13 1.13 0 0 0 .98-1.72L8.982 1.566ZM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5Zm.002 6a.5.5 0 1 1 0 1 .5.5 0 0 1 0-1Z"/>
+                </svg>
+                <div>
+                  {{ error }}
+                </div>
+                <button type="button" class="btn-close" (click)="error = ''"></button>
+              </div>
+
+              <!-- Success Alert -->
+              <div class="alert alert-success alert-dismissible fade show d-flex align-items-center" 
+                   role="alert"
+                   *ngIf="success">
+                <svg class="bi flex-shrink-0 me-2" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M10.854 7.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L7.5 9.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
+                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                </svg>
+                <div>
+                  {{ success }}
+                </div>
+              </div>
+
+              <form (ngSubmit)="registro()" #registroForm="ngForm">
+                <div class="mb-4">
+                  <label for="nombre" class="form-label fw-5">Nombre</label>
+                  <input 
+                    type="text" 
+                    class="form-control form-control-lg" 
+                    id="nombre"
+                    placeholder="Tu nombre completo"
+                    [(ngModel)]="data.nombre"
+                    name="nombre"
+                    #nombreField="ngModel"
+                    required
+                    minlength="2">
+                  <small class="text-danger d-block mt-2" *ngIf="nombreField.invalid && nombreField.touched">
+                    <i class="bi bi-exclamation-circle"></i>
+                    El nombre es requerido y debe tener al menos 2 caracteres
+                  </small>
+                </div>
+
+                <div class="mb-4">
+                  <label for="email" class="form-label fw-5">Email</label>
+                  <input 
+                    type="email" 
+                    class="form-control form-control-lg" 
+                    id="email"
+                    placeholder="tu@email.com"
+                    [(ngModel)]="data.email"
+                    name="email"
+                    #emailField="ngModel"
+                    required>
+                  <small class="text-danger d-block mt-2" *ngIf="emailField.invalid && emailField.touched">
+                    <i class="bi bi-exclamation-circle"></i>
+                    El email es requerido y debe ser válido
+                  </small>
+                </div>
+
+                <div class="mb-4">
+                  <label for="password" class="form-label fw-5">Contraseña</label>
+                  <input 
+                    type="password" 
+                    class="form-control form-control-lg" 
+                    id="password"
+                    placeholder="Mínimo 6 caracteres"
+                    [(ngModel)]="data.password"
+                    name="password"
+                    #passwordField="ngModel"
+                    required
+                    minlength="6">
+                  <small class="text-danger d-block mt-2" *ngIf="passwordField.invalid && passwordField.touched">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <span *ngIf="!passwordField.value">La contraseña es requerida</span>
+                    <span *ngIf="passwordField.value && passwordField.value.length < 6">La contraseña debe tener al menos 6 caracteres</span>
+                  </small>
+                  <small class="text-success d-block mt-2" *ngIf="passwordField.valid && passwordField.touched">
+                    <i class="bi bi-check-circle"></i>
+                    Contraseña válida
+                  </small>
+                </div>
+
+                <button type="submit" 
+                        class="btn btn-primary btn-lg w-100 fw-6 rounded-3"
+                        [disabled]="!registroForm.valid || isLoading">
+                  <span *ngIf="!isLoading">Crear Cuenta</span>
+                  <span *ngIf="isLoading">
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Creando cuenta...
+                  </span>
+                </button>
+              </form>
+
+              <hr class="my-4">
+              <p class="text-center text-muted">
+                ¿Ya tienes cuenta? <a href="/login" class="text-primary fw-6">Inicia sesión aquí</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    :host {
+      --bs-primary: #0066ff;
+    }
+    .form-control:focus {
+      border-color: #0066ff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 102, 255, 0.25);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #0066ff 0%, #0052cc 100%);
+      border: none;
+      transition: all 0.3s ease;
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0, 102, 255, 0.3);
+    }
+    .btn-primary:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    .alert {
+      border-radius: 12px;
+      border: none;
+    }
+    .alert-danger {
+      background-color: #fee;
+      color: #c33;
+    }
+    .alert-success {
+      background-color: #efe;
+      color: #3c3;
+    }
+    .card {
+      border-radius: 1rem;
+    }
+    small {
+      font-size: 0.85rem;
+    }
+  `]
+})
+export class RegistroComponent implements OnInit {
+  data: RegistroRequest = { nombre: '', email: '', password: '' };
+  error: string = '';
+  success: string = '';
+  isLoading = false;
+
+  constructor(private authService: AuthService, private router: Router) { }
+
+  ngOnInit() {
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/dashboard']);
+    }
+  }
+
+  registro() {
+    this.error = '';
+    this.isLoading = true;
+
+    const normalized = {
+      ...this.data,
+      email: (this.data.email || '').trim().toLowerCase()
+    };
+    
+    this.authService.registro(normalized).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.success = '✓ Cuenta creada exitosamente. Redirigiendo al login...';
+        setTimeout(() => this.router.navigate(['/login']), 2000);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.error = err.error?.message || err.error?.mensaje || 'Error al crear la cuenta';
+      }
+    });
+  }
+}
