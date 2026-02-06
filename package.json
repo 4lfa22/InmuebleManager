@@ -1,0 +1,13 @@
+{
+  "name": "inmueble-manager",
+  "version": "1.0.0",
+  "description": "Aplicación de gestión de inmuebles",
+  "private": true,
+  "scripts": {
+    "frontend:install": "cd inmuebleManagerFront && npm install",
+    "frontend:start": "cd inmuebleManagerFront && npm start",
+    "frontend:build": "cd inmuebleManagerFront && npm run build",
+    "backend:install": "cd inmuebleManagerBack && mvn clean install",
+    "backend:start": "cd inmuebleManagerBack && mvn spring-boot:run"
+  }
+}
