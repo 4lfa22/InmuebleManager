@@ -375,7 +375,8 @@ export class GastosComponent implements OnInit {
     return resultado;
   }
 
-  obtenerColorCategoria(tipo: string): string {
+  obtenerColorCategoria(tipo: string | undefined): string {
+    if (!tipo) return 'bg-secondary';
     const colores: {[key: string]: string} = {
       'AGUA': 'bg-info',
       'LUZ': 'bg-warning',
@@ -391,7 +392,8 @@ export class GastosComponent implements OnInit {
     return colores[tipo] || 'bg-secondary';
   }
 
-  obtenerIconoCategoria(tipo: string): string {
+  obtenerIconoCategoria(tipo: string | undefined): string {
+    if (!tipo) return '📝';
     const iconos: {[key: string]: string} = {
       'AGUA': '💧',
       'LUZ': '💡',

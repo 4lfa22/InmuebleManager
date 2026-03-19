@@ -1,6 +1,6 @@
-// Configuración de la API para Dual ngrok Setup
-// Para cambiar las URLs, modifica estas constantes:
-const BACKEND_NGROK_URL = 'https://a4c50be61d5f.ngrok-free.app';
+// Configuración de la API Backend
+// IMPORTANTE: Actualiza BACKEND_NGROK_URL cada vez que reinicies ngrok
+const BACKEND_NGROK_URL = 'https://evonne-eustatic-leslee.ngrok-free.dev';
 const BACKEND_LOCAL_URL = 'http://localhost:8080';
 
 export function getApiBaseUrl(): string {
@@ -10,14 +10,14 @@ export function getApiBaseUrl(): string {
 
   const hostname = window.location.hostname;
 
-  // Si accedes desde ngrok, usa la URL ngrok del backend
-  if (hostname.includes('ngrok')) {
-    console.log('✅ Backend URL:', BACKEND_NGROK_URL);
+  // Si accedes desde Vercel (o cualquier dominio remoto), usa ngrok
+  if (hostname.includes('vercel.app') || hostname.includes('ngrok')) {
+    console.log('🌐 Acceso remoto - Backend URL:', BACKEND_NGROK_URL);
     return BACKEND_NGROK_URL;
   }
 
   // Para localhost
-  console.log('✅ Backend URL:', BACKEND_LOCAL_URL);
+  console.log('💻 Acceso local - Backend URL:', BACKEND_LOCAL_URL);
   return BACKEND_LOCAL_URL;
 }
 
