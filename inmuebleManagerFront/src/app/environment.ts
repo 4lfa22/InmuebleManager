@@ -1,6 +1,6 @@
 // Configuración de la API Backend
 // IMPORTANTE: Actualiza BACKEND_NGROK_URL cada vez que reinicies ngrok
-const BACKEND_NGROK_URL = 'https://a4c50be61d5f.ngrok-free.app';
+const BACKEND_NGROK_URL = 'https://evonne-eustatic-leslee.ngrok-free.dev';
 const BACKEND_LOCAL_URL = 'http://localhost:8080';
 
 export function getApiBaseUrl(): string {
