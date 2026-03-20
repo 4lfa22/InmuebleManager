@@ -1,7 +1,6 @@
 // Configuración de la API Backend
 const BACKEND_LOCAL_URL = 'http://localhost:8080';
-// TODO: Cuando despliegues el backend en producción, configura esta URL
-const BACKEND_PRODUCTION_URL = 'https://tu-backend-en-produccion.com';
+const BACKEND_PRODUCTION_URL = 'https://inmueblemanager-production.up.railway.app';
 
 export function getApiBaseUrl(): string {
   if (typeof window === 'undefined') {
