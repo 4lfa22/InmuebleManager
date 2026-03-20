@@ -1,22 +1,22 @@
 // Configuración de la API Backend
-// IMPORTANTE: Actualiza BACKEND_NGROK_URL cada vez que reinicies ngrok
-const BACKEND_NGROK_URL = 'https://evonne-eustatic-leslee.ngrok-free.dev';
 const BACKEND_LOCAL_URL = 'http://localhost:8080';
+// TODO: Cuando despliegues el backend en producción, configura esta URL
+const BACKEND_PRODUCTION_URL = 'https://tu-backend-en-produccion.com';
 
 export function getApiBaseUrl(): string {
   if (typeof window === 'undefined') {
-    return BACKEND_NGROK_URL;
+    return BACKEND_LOCAL_URL;
   }
 
   const hostname = window.location.hostname;
 
-  // Si accedes desde Vercel (o cualquier dominio remoto), usa ngrok
-  if (hostname.includes('vercel.app') || hostname.includes('ngrok')) {
-    console.log('🌐 Acceso remoto - Backend URL:', BACKEND_NGROK_URL);
-    return BACKEND_NGROK_URL;
+  // Si accedes desde Vercel (producción), usa el backend en producción
+  if (hostname.includes('vercel.app')) {
+    console.log('🌐 Acceso desde Vercel - Backend URL:', BACKEND_PRODUCTION_URL);
+    return BACKEND_PRODUCTION_URL;
   }
 
-  // Para localhost
+  // Para localhost (desarrollo)
   console.log('💻 Acceso local - Backend URL:', BACKEND_LOCAL_URL);
   return BACKEND_LOCAL_URL;
 }
