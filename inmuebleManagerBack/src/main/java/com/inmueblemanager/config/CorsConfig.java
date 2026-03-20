@@ -12,13 +12,12 @@ public class CorsConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOriginPatterns(
                     "http://localhost:4200",
-                    "https://*.vercel.app",
-                    "https://*.railway.app"
+                    "https://*.vercel.app"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("*")
                 .exposedHeaders("Authorization", "Content-Type")
-                .allowCredentials(true)
+                .allowCredentials(false)  // Cambiar a false para permitir patterns
                 .maxAge(3600);
     }
 }

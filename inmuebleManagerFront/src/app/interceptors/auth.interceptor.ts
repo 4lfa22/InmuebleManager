@@ -12,25 +12,21 @@ export const authInterceptor: HttpInterceptorFn = (
 
   // No añadir token a endpoints de autenticación (excepto /me)
   if (req.url.includes('/api/auth/login') || req.url.includes('/api/auth/registro')) {
-    const clonedReq = req.clone({ withCredentials: true });
-    return next(clonedReq);
+    return next(req);
   }
 
   const token = authService.getToken();
-  let clonedReq = req;
   
   if (token) {
-    clonedReq = req.clone({
+    const clonedReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`
-      },
-      withCredentials: true
+      }
     });
-  } else {
-    clonedReq = req.clone({ withCredentials: true });
+    return next(clonedReq);
   }
 
-  return next(clonedReq).pipe(
+  return next(req).pipe(
     catchError(error => {
       // Si recibimos 401, limpiar localStorage
       if (error.status === 401) {
