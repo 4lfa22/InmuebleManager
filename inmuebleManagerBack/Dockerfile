@@ -15,8 +15,10 @@ COPY --from=builder /app/target/*.jar app.jar
 
 # Variables de entorno por defecto
 ENV PORT=8080 \
-    JAVA_OPTS="-Xmx512m -Xms256m"
+    JAVA_OPTS="-Xmx512m -Xms256m" \
+    SPRING_PROFILES_ACTIVE=prod
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Usar shell form para permitir expansión de variables
+ENTRYPOINT java $JAVA_OPTS -Dserver.port=$PORT -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -jar app.jar
