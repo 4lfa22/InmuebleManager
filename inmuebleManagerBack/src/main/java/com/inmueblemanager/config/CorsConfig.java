@@ -10,11 +10,15 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOriginPatterns("*")
+                .allowedOriginPatterns(
+                    "http://localhost:4200",
+                    "https://*.vercel.app",
+                    "https://*.railway.app"
+                )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("*")
-                .exposedHeaders("Authorization", "Content-Type", "ngrok-skip-browser-warning")
-                .allowCredentials(false)
+                .exposedHeaders("Authorization", "Content-Type")
+                .allowCredentials(true)
                 .maxAge(3600);
     }
 }

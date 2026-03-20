@@ -10,21 +10,26 @@ export const authInterceptor: HttpInterceptorFn = (
 ): Observable<HttpEvent<any>> => {
   const authService = inject(AuthService);
 
-  // Añadir header para evitar la página de advertencia de ngrok
-  let headers = req.headers.set('ngrok-skip-browser-warning', 'true');
-
   // No añadir token a endpoints de autenticación (excepto /me)
   if (req.url.includes('/api/auth/login') || req.url.includes('/api/auth/registro')) {
-    const clonedReq = req.clone({ headers });
+    const clonedReq = req.clone({ withCredentials: true });
     return next(clonedReq);
   }
 
   const token = authService.getToken();
+  let clonedReq = req;
+  
   if (token) {
-    headers = headers.set('Authorization', `Bearer ${token}`);
+    clonedReq = req.clone({
+      setHeaders: {
+        Authorization: `Bearer ${token}`
+      },
+      withCredentials: true
+    });
+  } else {
+    clonedReq = req.clone({ withCredentials: true });
   }
 
-  const clonedReq = req.clone({ headers });
   return next(clonedReq).pipe(
     catchError(error => {
       // Si recibimos 401, limpiar localStorage

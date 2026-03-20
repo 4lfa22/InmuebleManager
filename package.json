@@ -8,6 +8,8 @@
     "frontend:start": "cd inmuebleManagerFront && npm start",
     "frontend:build": "cd inmuebleManagerFront && npm run build",
     "backend:install": "cd inmuebleManagerBack && mvn clean install",
-    "backend:start": "cd inmuebleManagerBack && mvn spring-boot:run"
+    "backend": "start-backend.bat",
+    "ngrok": "ngrok http 8080",
+    "dev": "start-all.bat"
   }
 }
