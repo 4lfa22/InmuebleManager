@@ -11,7 +11,7 @@ export function getApiBaseUrl(): string {
 
   // Si accedes desde Vercel (producción), usa el backend en producción
   if (hostname.includes('vercel.app')) {
-    console.log('🌐 Acceso desde Vercel - Backend URL:', BACKEND_PRODUCTION_URL);
+    console.log('🌐 Acceso desde Back - Backend URL:', BACKEND_PRODUCTION_URL);
     return BACKEND_PRODUCTION_URL;
   }
 

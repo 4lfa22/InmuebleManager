@@ -4,6 +4,7 @@ inmuebleManagerBack/*.log
 inmuebleManagerBack/*.class
 
 # Node/Angular
+node_modules/
 inmuebleManagerFront/node_modules/
 inmuebleManagerFront/dist/
 
