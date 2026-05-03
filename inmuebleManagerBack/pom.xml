@@ -90,6 +90,12 @@
             <version>2.6.0</version>
         </dependency>
 
+        <!-- ✅ Spring Mail (para 2FA) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- ✅ DevTools (desarrollo) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

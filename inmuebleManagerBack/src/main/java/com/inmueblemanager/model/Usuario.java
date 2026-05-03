@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +29,17 @@ public class Usuario extends BaseEntity {
 
     @Column(nullable = false)
     private String nombre;
+
+    // Campos para 2FA
+    @Column(name = "two_factor_enabled")
+    @Builder.Default
+    private Boolean twoFactorEnabled = false;
+
+    @Column(name = "two_factor_code")
+    private String twoFactorCode;
+
+    @Column(name = "two_factor_code_expiry")
+    private LocalDateTime twoFactorCodeExpiry;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default

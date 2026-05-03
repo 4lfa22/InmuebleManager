@@ -1,9 +1,6 @@
 package com.inmueblemanager.controller;
 
-import com.inmueblemanager.dto.LoginRequest;
-import com.inmueblemanager.dto.LoginResponse;
-import com.inmueblemanager.dto.RegistroRequest;
-import com.inmueblemanager.dto.RegistroResponse;
+import com.inmueblemanager.dto.*;
 import com.inmueblemanager.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +20,26 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         LoginResponse response = authService.login(loginRequest);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/verify-2fa")
+    public ResponseEntity<LoginResponse> verifyTwoFactor(@Valid @RequestBody VerifyCodeRequest request) {
+        LoginResponse response = authService.verifyTwoFactorCode(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/2fa/enable")
+    public ResponseEntity<TwoFactorToggleResponse> enable2FA() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        TwoFactorToggleResponse response = authService.enable2FA(authentication);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/2fa/disable")
+    public ResponseEntity<TwoFactorToggleResponse> disable2FA() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        TwoFactorToggleResponse response = authService.disable2FA(authentication);
         return ResponseEntity.ok(response);
     }
 

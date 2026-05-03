@@ -1,9 +1,6 @@
 package com.inmueblemanager.service;
 
-import com.inmueblemanager.dto.LoginRequest;
-import com.inmueblemanager.dto.LoginResponse;
-import com.inmueblemanager.dto.RegistroRequest;
-import com.inmueblemanager.dto.RegistroResponse;
+import com.inmueblemanager.dto.*;
 import com.inmueblemanager.model.Usuario;
 import com.inmueblemanager.repository.UsuarioRepository;
 import com.inmueblemanager.security.JwtTokenProvider;
@@ -22,9 +19,10 @@ public class AuthService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
+    private final TwoFactorService twoFactorService;
 
     /**
-     * Login de usuario y generación de token JWT
+     * Login de usuario - Si tiene 2FA activado, envía código en lugar de token
      */
     public LoginResponse login(LoginRequest loginRequest) {
         // Normalizar email (evitar problemas de mayúsculas/espacios)
@@ -34,16 +32,31 @@ public class AuthService {
         Usuario usuario = usuarioRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // Verificar contraseña de forma explícita para diagnosticar 401
+        // Verificar contraseña
         if (!passwordEncoder.matches(loginRequest.getPassword(), usuario.getPassword())) {
             log.warn("Login fallido: bad credentials para email={} (userId={})", email, usuario.getId());
             throw new BadCredentialsException("Credenciales inválidas");
         }
 
-        log.info("Login OK para email={} (userId={})", email, usuario.getId());
+        log.info("Credenciales correctas para email={} (userId={})", email, usuario.getId());
 
-        // Generar token JWT
+        // Si tiene 2FA activado, generar y enviar código
+        if (Boolean.TRUE.equals(usuario.getTwoFactorEnabled())) {
+            twoFactorService.generateAndSendCode(usuario);
+            log.info("2FA activado - código enviado a email={}", email);
+            
+            return LoginResponse.builder()
+                    .requires2FA(true)
+                    .twoFactorEnabled(true)
+                    .id(usuario.getId())
+                    .email(usuario.getEmail())
+                    .nombre(usuario.getNombre())
+                    .build();
+        }
+
+        // Si no tiene 2FA, generar token JWT directamente
         String token = tokenProvider.generateToken(usuario.getEmail());
+        log.info("Login OK (sin 2FA) para email={} (userId={})", email, usuario.getId());
 
         return LoginResponse.builder()
                 .token(token)
@@ -52,6 +65,70 @@ public class AuthService {
                 .email(usuario.getEmail())
                 .nombre(usuario.getNombre())
                 .expiresIn(tokenProvider.getExpirationTime())
+                .requires2FA(false)
+                .twoFactorEnabled(false)
+                .build();
+    }
+
+    /**
+     * Verifica el código 2FA y devuelve el token si es válido
+     */
+    public LoginResponse verifyTwoFactorCode(VerifyCodeRequest request) {
+        String email = request.getEmail() != null ? request.getEmail().trim().toLowerCase() : null;
+
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // Verificar el código
+        if (!twoFactorService.verifyCode(usuario, request.getCode())) {
+            throw new BadCredentialsException("Código de verificación inválido o expirado");
+        }
+
+        // Si el código es válido, generar token JWT
+        String token = tokenProvider.generateToken(usuario.getEmail());
+        log.info("2FA verificado exitosamente para email={} (userId={})", email, usuario.getId());
+
+        return LoginResponse.builder()
+                .token(token)
+                .type("Bearer")
+                .id(usuario.getId())
+                .email(usuario.getEmail())
+                .nombre(usuario.getNombre())
+                .expiresIn(tokenProvider.getExpirationTime())
+                .requires2FA(false)
+                .twoFactorEnabled(true)
+                .build();
+    }
+
+    /**
+     * Activa 2FA para el usuario autenticado
+     */
+    public TwoFactorToggleResponse enable2FA(Authentication authentication) {
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        twoFactorService.enable2FA(usuario);
+
+        return TwoFactorToggleResponse.builder()
+                .enabled(true)
+                .mensaje("Autenticación de dos factores activada exitosamente")
+                .build();
+    }
+
+    /**
+     * Desactiva 2FA para el usuario autenticado
+     */
+    public TwoFactorToggleResponse disable2FA(Authentication authentication) {
+        String email = authentication.getName();
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        twoFactorService.disable2FA(usuario);
+
+        return TwoFactorToggleResponse.builder()
+                .enabled(false)
+                .mensaje("Autenticación de dos factores desactivada exitosamente")
                 .build();
     }
 
@@ -72,6 +149,7 @@ public class AuthService {
                 .email(email)
                 .password(passwordEncoder.encode(registroRequest.getPassword()))
                 .nombre(registroRequest.getNombre())
+                .twoFactorEnabled(false)
                 .build();
 
         Usuario usuarioGuardado = usuarioRepository.save(usuario);
@@ -106,6 +184,7 @@ public class AuthService {
                 .email(usuario.getEmail())
                 .nombre(usuario.getNombre())
                 .expiresIn(0L)
+                .twoFactorEnabled(usuario.getTwoFactorEnabled())
                 .build();
     }
 }

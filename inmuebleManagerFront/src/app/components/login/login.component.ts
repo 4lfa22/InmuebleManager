@@ -3,13 +3,23 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService, LoginRequest } from '../../services/auth.service';
+import { Verify2FAComponent } from '../verify-2fa/verify-2fa.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, Verify2FAComponent],
   template: `
-    <div class="container mt-5">
+    <!-- Pantalla de verificación 2FA -->
+    <app-verify-2fa 
+      *ngIf="showVerification2FA"
+      [email]="credentials.email"
+      (verified)="onVerificationSuccess()"
+      (cancelled)="onVerificationCancelled()">
+    </app-verify-2fa>
+
+    <!-- Formulario de login normal -->
+    <div class="container mt-5" *ngIf="!showVerification2FA">
       <div class="row justify-content-center">
         <div class="col-md-6">
           <div class="card shadow-lg border-0 rounded-4">
@@ -124,6 +134,7 @@ export class LoginComponent implements OnInit {
   credentials: LoginRequest = { email: '', password: '' };
   error: string = '';
   isLoading = false;
+  showVerification2FA = false;
 
   constructor(private authService: AuthService, private router: Router) { }
 
@@ -143,14 +154,32 @@ export class LoginComponent implements OnInit {
     };
     
     this.authService.login(normalized).subscribe({
-      next: () => {
+      next: (response) => {
         this.isLoading = false;
-        this.router.navigate(['/dashboard']);
+        
+        // Si requiere 2FA, mostrar pantalla de verificación
+        if (response.requires2FA) {
+          this.showVerification2FA = true;
+        } else {
+          // Login exitoso sin 2FA
+          this.router.navigate(['/dashboard']);
+        }
       },
       error: (err) => {
         this.isLoading = false;
         this.error = err.error?.message || 'Email o contraseña incorrectos';
       }
     });
+  }
+
+  onVerificationSuccess() {
+    // Redirigir a dashboard después de verificación exitosa
+    this.router.navigate(['/dashboard']);
+  }
+
+  onVerificationCancelled() {
+    // Volver al formulario de login
+    this.showVerification2FA = false;
+    this.credentials.password = ''; // Limpiar la contraseña por seguridad
   }
 }

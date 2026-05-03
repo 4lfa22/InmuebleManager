@@ -10,12 +10,15 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string;
-  type: string;
-  id: number;
-  email: string;
-  nombre: string;
-  expiresIn: number;
+  token?: string;
+  type?: string;
+  id?: number;
+  email?: string;
+  nombre?: string;
+  expiresIn?: number;
+  requires2FA?: boolean;
+  twoFactorEnabled?: boolean;
+  message?: string;
 }
 
 export interface RegistroRequest {
@@ -29,6 +32,16 @@ export interface RegistroResponse {
   email: string;
   nombre: string;
   mensaje: string;
+}
+
+export interface VerifyCodeRequest {
+  email: string;
+  code: string;
+}
+
+export interface TwoFactorToggleResponse {
+  message: string;
+  twoFactorEnabled: boolean;
 }
 
 @Injectable({
@@ -49,14 +62,17 @@ export class AuthService {
   login(credentials: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, credentials).pipe(
       tap(response => {
-        this.saveToken(response.token);
-        const user = {
-          id: response.id,
-          email: response.email,
-          nombre: response.nombre
-        };
-        this.saveUser(user);
-        this.currentUserSubject.next(user);
+        // Solo guardamos el token si NO requiere 2FA
+        if (!response.requires2FA && response.token) {
+          this.saveToken(response.token);
+          const user = {
+            id: response.id,
+            email: response.email,
+            nombre: response.nombre
+          };
+          this.saveUser(user);
+          this.currentUserSubject.next(user);
+        }
       })
     );
   }
@@ -138,5 +154,30 @@ export class AuthService {
         }
       });
     });
+  }
+
+  verify2FA(request: VerifyCodeRequest): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(`${this.apiUrl}/verify-2fa`, request).pipe(
+      tap(response => {
+        if (response.token) {
+          this.saveToken(response.token);
+          const user = {
+            id: response.id,
+            email: response.email,
+            nombre: response.nombre
+          };
+          this.saveUser(user);
+          this.currentUserSubject.next(user);
+        }
+      })
+    );
+  }
+
+  enable2FA(): Observable<TwoFactorToggleResponse> {
+    return this.http.post<TwoFactorToggleResponse>(`${this.apiUrl}/2fa/enable`, {});
+  }
+
+  disable2FA(): Observable<TwoFactorToggleResponse> {
+    return this.http.post<TwoFactorToggleResponse>(`${this.apiUrl}/2fa/disable`, {});
   }
 }

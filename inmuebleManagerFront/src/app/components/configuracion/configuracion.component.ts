@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-configuracion',
@@ -103,12 +104,44 @@ import { RouterLink } from '@angular/router';
                 <div class="card-body">
                   <h5 class="card-title mb-4">Privacidad y Seguridad</h5>
                   
+                  <!-- Mensajes de éxito/error -->
+                  <div *ngIf="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    {{ successMessage }}
+                    <button type="button" class="btn-close" (click)="successMessage = ''"></button>
+                  </div>
+
+                  <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    {{ errorMessage }}
+                    <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+                  </div>
+
                   <div class="mb-4">
                     <h6>Autenticación de Dos Factores</h6>
-                    <p class="text-muted">Añade una capa extra de seguridad a tu cuenta</p>
-                    <button class="btn btn-outline-primary">
-                      <i class="bi bi-shield-check"></i> Habilitar 2FA
-                    </button>
+                    <p class="text-muted">
+                      {{ twoFactorEnabled ? 'La autenticación de dos factores está activada. Tu cuenta está protegida con un código que se enviará a tu correo al iniciar sesión.' : 'Añade una capa extra de seguridad a tu cuenta. Recibirás un código por correo electrónico cada vez que inicies sesión.' }}
+                    </p>
+                    <div class="d-flex align-items-center gap-3">
+                      <button 
+                        class="btn"
+                        [class.btn-danger]="twoFactorEnabled"
+                        [class.btn-primary]="!twoFactorEnabled"
+                        (click)="toggle2FA()"
+                        [disabled]="isLoading2FA">
+                        <span *ngIf="!isLoading2FA">
+                          <i class="bi" [class.bi-shield-x]="twoFactorEnabled" [class.bi-shield-check]="!twoFactorEnabled"></i>
+                          {{ twoFactorEnabled ? 'Deshabilitar 2FA' : 'Habilitar 2FA' }}
+                        </span>
+                        <span *ngIf="isLoading2FA">
+                          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                          Procesando...
+                        </span>
+                      </button>
+                      <span *ngIf="twoFactorEnabled" class="badge bg-success">
+                        <i class="bi bi-shield-fill-check"></i> Activo
+                      </span>
+                    </div>
                   </div>
 
                   <div class="mb-4">
@@ -119,8 +152,8 @@ import { RouterLink } from '@angular/router';
                     </button>
                   </div>
 
-                  <div class="alert alert-warning">
-                    <strong>Nota:</strong> Estas características de privacidad avanzada estarán disponibles próximamente.
+                  <div class="alert alert-info">
+                    <strong>Nota:</strong> La gestión de sesiones activas estará disponible próximamente.
                   </div>
                 </div>
               </div>
@@ -190,4 +223,70 @@ import { RouterLink } from '@angular/router';
     }
   `]
 })
-export class ConfiguracionComponent { }
+export class ConfiguracionComponent implements OnInit {
+  twoFactorEnabled = false;
+  isLoading2FA = false;
+  successMessage = '';
+  errorMessage = '';
+
+  constructor(private authService: AuthService) {}
+
+  ngOnInit() {
+    this.checkUserProfile();
+  }
+
+  checkUserProfile() {
+    // Obtener el perfil del usuario para saber si tiene 2FA habilitado
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser) {
+      // Asumimos que el usuario tiene un campo twoFactorEnabled
+      // En una implementación real, deberías hacer una llamada al backend
+      // para obtener el estado actual de 2FA
+      this.twoFactorEnabled = currentUser.twoFactorEnabled || false;
+    }
+  }
+
+  toggle2FA() {
+    if (this.twoFactorEnabled) {
+      this.disable2FA();
+    } else {
+      this.enable2FA();
+    }
+  }
+
+  enable2FA() {
+    this.isLoading2FA = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.authService.enable2FA().subscribe({
+      next: (response) => {
+        this.isLoading2FA = false;
+        this.twoFactorEnabled = response.twoFactorEnabled;
+        this.successMessage = '¡Autenticación de dos factores habilitada! A partir de ahora recibirás un código por correo al iniciar sesión.';
+      },
+      error: (err) => {
+        this.isLoading2FA = false;
+        this.errorMessage = err.error?.message || 'Error al habilitar 2FA. Por favor, intenta nuevamente.';
+      }
+    });
+  }
+
+  disable2FA() {
+    this.isLoading2FA = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.authService.disable2FA().subscribe({
+      next: (response) => {
+        this.isLoading2FA = false;
+        this.twoFactorEnabled = response.twoFactorEnabled;
+        this.successMessage = 'Autenticación de dos factores deshabilitada. Ya no recibirás códigos al iniciar sesión.';
+      },
+      error: (err) => {
+        this.isLoading2FA = false;
+        this.errorMessage = err.error?.message || 'Error al deshabilitar 2FA. Por favor, intenta nuevamente.';
+      }
+    });
+  }
+}

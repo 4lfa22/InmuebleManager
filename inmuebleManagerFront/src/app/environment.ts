@@ -1,6 +1,6 @@
 // Configuración de la API Backend
 const BACKEND_LOCAL_URL = 'http://localhost:8080';
-const BACKEND_PRODUCTION_URL = 'https://inmueblemanager-production.up.railway.app';
+const BACKEND_PRODUCTION_URL = 'https://inmueblemanager-back.onrender.com';
 
 export function getApiBaseUrl(): string {
   if (typeof window === 'undefined') {

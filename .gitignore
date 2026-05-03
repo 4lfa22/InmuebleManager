@@ -1,11 +1,11 @@
 # Maven
-backend/target/
-backend/*.log
-backend/*.class
+inmuebleManagerBack/target/
+inmuebleManagerBack/*.log
+inmuebleManagerBack/*.class
 
 # Node/Angular
-frontend/node_modules/
-frontend/dist/
+inmuebleManagerFront/node_modules/
+inmuebleManagerFront/dist/
 
 # IDEs
 *.iml
@@ -16,5 +16,7 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 
-#
-*.md
+# Variables de entorno
+.env
+.env.local
+*.env
